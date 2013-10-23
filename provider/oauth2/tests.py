@@ -454,10 +454,6 @@ class AccessTokenTest(BaseOAuth2TestCase):
         self.assertEqual(400, response.status_code, response.content)
         self.assertEqual('invalid_grant', json.loads(response.content)['error'])
 
-    def test_access_token_response_valid_token_type(self):
-        token = self._login_authorize_get_token()
-        self.assertEqual(token['token_type'], constants.TOKEN_TYPE, token)
-
 
 class AuthBackendTest(BaseOAuth2TestCase):
     fixtures = ['test_oauth2']
