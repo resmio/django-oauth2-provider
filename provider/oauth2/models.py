@@ -11,6 +11,7 @@ from ..constants import CLIENT_TYPES
 from ..utils import short_token, long_token, get_token_expiry
 from ..utils import get_code_expiry
 from ..utils import now
+from ..validators import validate_uris
 from .managers import AccessTokenManager
 
 try:
@@ -41,7 +42,7 @@ class Client(models.Model):
         blank=True, null=True)
     name = models.CharField(max_length=255, blank=True)
     url = models.URLField(help_text="Your application's URL.")
-    redirect_uri = models.URLField(help_text="Your application's callback URL")
+    redirect_uri = models.TextField(help_text="Your application's callback URL", validators=[validate_uris])
     client_id = models.CharField(max_length=255, default=short_token)
     client_secret = models.CharField(max_length=255, default=long_token)
     client_type = models.IntegerField(choices=CLIENT_TYPES)
