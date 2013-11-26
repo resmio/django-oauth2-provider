@@ -165,8 +165,8 @@ class AuthorizationRequestForm(ScopeMixin, OAuthForm):
                 logger.error("%s not in %s", redirect_uri, self.client.redirect_uri)
                 raise OAuthValidationError({
                     'error': 'invalid_request',
-                    'error_description': _("The requested redirect didn't "
-                        "match the client settings.")})
+                    'error_description': _("The requested redirect (%s) didn't "
+                        "match the client settings (%s)." % (redirect_uri, self.client.redirect_uri))})
         return redirect_uri
 
 
