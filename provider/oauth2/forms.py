@@ -160,11 +160,13 @@ class AuthorizationRequestForm(ScopeMixin, OAuthForm):
 
         if redirect_uri:
             if redirect_uri not in self.client.redirect_uri.split(" "):
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error("%s not in %s", redirect_uri, self.client.redirect_uri)
                 raise OAuthValidationError({
                     'error': 'invalid_request',
                     'error_description': _("The requested redirect didn't "
                         "match the client settings.")})
-
         return redirect_uri
 
 
