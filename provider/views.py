@@ -294,7 +294,7 @@ class Redirect(OAuthView, Mixin):
         error = self.get_data(request, "error")
         client = self.get_data(request, "client")
 
-        redirect_uri = data.get('redirect_uri', None) or client.redirect_uri
+        redirect_uri = data.get('redirect_uri', None) or client.redirect_uri.split(" ")[0]
 
         parsed = urlparse.urlparse(redirect_uri)
 
