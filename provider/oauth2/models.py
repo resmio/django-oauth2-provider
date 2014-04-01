@@ -106,7 +106,7 @@ class Grant(models.Model):
     * :attr:`redirect_uri`
     * :attr:`scope`
     """
-    user = models.ForeignKey(AUTH_USER_MODEL)
+    user = models.ForeignKey(AUTH_USER_MODEL, blank=True, null=True)
     client = models.ForeignKey(Client)
     code = models.CharField(max_length=255, default=long_token)
     expires = models.DateTimeField(default=get_code_expiry)
@@ -143,7 +143,7 @@ class AccessToken(models.Model):
     * :meth:`get_expire_delta` - returns an integer representing seconds to
         expiry
     """
-    user = models.ForeignKey(AUTH_USER_MODEL)
+    user = models.ForeignKey(AUTH_USER_MODEL, blank=True, null=True)
     token = models.CharField(max_length=255, default=long_token, db_index=True)
     client = models.ForeignKey(Client)
     expires = models.DateTimeField()
@@ -196,7 +196,7 @@ class RefreshToken(models.Model):
     * :attr:`client` - :class:`Client`
     * :attr:`expired` - ``boolean``
     """
-    user = models.ForeignKey(AUTH_USER_MODEL)
+    user = models.ForeignKey(AUTH_USER_MODEL, blank=True, null=True)
     token = models.CharField(max_length=255, default=long_token)
     access_token = models.OneToOneField(AccessToken,
             related_name='refresh_token')

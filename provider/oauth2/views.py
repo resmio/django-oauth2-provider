@@ -98,7 +98,7 @@ class AccessTokenView(AccessTokenView):
             raise OAuthError(form.errors)
         return form.cleaned_data
 
-    def get_access_token(self, request, user, scope, client):
+    def get_access_token(self, request, user, scope, client, refreshable=True):
         try:
             # Attempt to fetch an existing access token.
             at = AccessToken.objects.get(user=user, client=client,
@@ -106,7 +106,8 @@ class AccessTokenView(AccessTokenView):
         except AccessToken.DoesNotExist:
             # None found... make a new one!
             at = self.create_access_token(request, user, scope, client)
-            self.create_refresh_token(request, user, scope, at, client)
+            if refreshable:
+                self.create_refresh_token(request, user, scope, at, client)
         return at
 
     def create_access_token(self, request, user, scope, client):

@@ -415,7 +415,7 @@ class AccessToken(OAuthView, Mixin):
         """
         raise NotImplementedError
 
-    def get_access_token(self, request, user, scope, client):
+    def get_access_token(self, request, user, scope, client, refreshable=True):
         """
         Override to handle fetching of an existing access token.
 
@@ -562,11 +562,9 @@ class AccessToken(OAuthView, Mixin):
         scope = data.get('scope')
 
         if constants.SINGLE_ACCESS_TOKEN:
-            at = self.get_access_token(request, client.user, scope, client)
+            at = self.get_access_token(request, client.user, scope, client, refreshable=False)
         else:
             at = self.create_access_token(request, client.user, scope, client)
-            rt = self.create_refresh_token(request, client.user, scope, at,
-                                           client)
 
         return self.access_token_response(at)
 
