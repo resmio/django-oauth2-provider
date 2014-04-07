@@ -34,7 +34,9 @@
             "client_secret": "t8k4RB4gYWRAVrTWc58aTsTxXeHThVwkthXeRVeYu4U", 
             "client_type": 0, 
             "url": "http://example.com/", 
-            "user": 2
+            "user": 2,
+            "created":"2013-11-18 16:12:44",
+            "modified":"2013-11-18 16:12:44"
         }, 
         "model": "oauth2.client", 
         "pk": 3
