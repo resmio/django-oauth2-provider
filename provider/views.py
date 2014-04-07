@@ -308,7 +308,10 @@ class Redirect(OAuthView, Mixin):
         client = self.get_data(request, "client")
 
         # client must be properly deserialized to become a valid instance
-        client = Client.deserialize(client)
+        # but only if it has been serialized in the first place
+        if not isinstance(client, Client):
+            client = Client.deserialize(client)
+
 
         # this is an edge case that is caused by making a request with no data
         # it should only happen if this view is called manually, out of the
