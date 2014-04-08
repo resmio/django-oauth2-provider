@@ -148,7 +148,7 @@ class AccessToken(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL)
     token = models.CharField(max_length=255, default=long_token, db_index=True)
     client = models.ForeignKey(Client)
-    expires = models.DateTimeField(default=get_token_expiry)
+    expires = models.DateTimeField()
     scope = models.IntegerField(default=constants.SCOPES[0][0],
             choices=constants.SCOPES)
     created = models.DateTimeField(default=timezone.now, blank=True, editable=False)
