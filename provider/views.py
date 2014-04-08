@@ -564,10 +564,13 @@ class AccessToken(OAuthView, Mixin):
         data = self.get_client_credentials_grant(request, data, client)
         scope = data.get('scope')
 
+        # Client credentials should operate on public data and the
+        # client only -- exposing the user has the potential to compromise
+        # other assets associated with the user but not necessarily the client
         if constants.SINGLE_ACCESS_TOKEN:
-            at = self.get_access_token(request, client.user, scope, client, refreshable=False)
+            at = self.get_access_token(request, None, scope, client, refreshable=False)
         else:
-            at = self.create_access_token(request, client.user, scope, client)
+            at = self.create_access_token(request, None, scope, client)
 
         return self.access_token_response(at)
 
