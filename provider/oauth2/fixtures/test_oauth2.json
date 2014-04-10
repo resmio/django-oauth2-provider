@@ -6,7 +6,9 @@
             "client_secret": "35c25066023f32c4f098d1e40de94f07f98c1acf", 
             "client_type": 0, 
             "url": "http://example.com/", 
-            "user": 1
+            "user": 1,
+            "created": "2012-01-23 05:44:17",
+            "modified": "2012-01-23 05:44:17"
         }, 
         "model": "oauth2.client", 
         "pk": 1
@@ -18,7 +20,9 @@
             "client_secret": "1944b695ca0cbf4f419a7d5c7e4fed13a660bc04", 
             "client_type": 0, 
             "url": "http://example.com/", 
-            "user": 2
+            "user": 2,
+            "created": "2012-01-23 05:44:17",
+            "modified": "2012-01-23 05:44:17"
         }, 
         "model": "oauth2.client", 
         "pk": 2
@@ -30,11 +34,27 @@
             "client_secret": "t8k4RB4gYWRAVrTWc58aTsTxXeHThVwkthXeRVeYu4U", 
             "client_type": 0, 
             "url": "http://example.com/", 
-            "user": 2
+            "user": 2,
+            "created": "2012-01-23 05:44:17",
+            "modified": "2012-01-23 05:44:17"
         }, 
         "model": "oauth2.client", 
         "pk": 3
-    }, 
+    },
+    {
+        "fields": {
+            "redirect_uri": "http://example.com/application/3/ http://example.com/application/4/",
+            "client_id": "abca429f50ca45386ee4",
+            "client_secret": "somethinYWRAVrTWc58aTsTxXeHThVwkthXeRVeYu4U",
+            "client_type": 0,
+            "url": "http://example.com/",
+            "user": null,
+            "created": "2012-01-23 05:44:17",
+            "modified": "2012-01-23 05:44:17"
+        },
+        "model": "oauth2.client",
+        "pk": 4
+    },
     {
         "fields": {
             "date_joined": "2012-01-23 05:44:17", 

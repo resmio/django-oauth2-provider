@@ -1,13 +1,14 @@
 from datetime import timedelta
 from django.core.urlresolvers import reverse
+from .. import constants
 from ..views import Capture, Authorize, Redirect
 from ..views import AccessToken as AccessTokenView, OAuthError
 from ..utils import now
 from .forms import AuthorizationRequestForm, AuthorizationForm
 from .forms import PasswordGrantForm, RefreshTokenGrantForm
-from .forms import AuthorizationCodeGrantForm
+from .forms import AuthorizationCodeGrantForm, ClientCredentialsGrantForm
 from .models import Client, RefreshToken, AccessToken
-from .backends import BasicClientBackend, RequestParamsClientBackend
+from .backends import BasicClientBackend, RequestParamsClientBackend, PublicPasswordBackend
 
 
 class Capture(Capture):
@@ -70,6 +71,7 @@ class AccessTokenView(AccessTokenView):
     authentication = (
         BasicClientBackend,
         RequestParamsClientBackend,
+        PublicPasswordBackend,
     )
 
     def get_authorization_code_grant(self, request, data, client):
@@ -90,14 +92,22 @@ class AccessTokenView(AccessTokenView):
             raise OAuthError(form.errors)
         return form.cleaned_data
 
-    def get_access_token(self, request, user, scope, client):
+    def get_client_credentials_grant(self, request, data, client):
+        form = ClientCredentialsGrantForm(data, client=client)
+        if not form.is_valid():
+            raise OAuthError(form.errors)
+        return form.cleaned_data
+
+    def get_access_token(self, request, user, scope, client, refreshable=True):
         try:
             # Attempt to fetch an existing access token.
-            at = AccessToken.objects.get(user=user, client=client, scope=scope)
+            at = AccessToken.objects.get(user=user, client=client,
+                                         scope=scope, expires__gt=now())
         except AccessToken.DoesNotExist:
             # None found... make a new one!
             at = self.create_access_token(request, user, scope, client)
-            self.create_refresh_token(request, user, scope, at, client)
+            if refreshable:
+                self.create_refresh_token(request, user, scope, at, client)
         return at
 
     def create_access_token(self, request, user, scope, client):
@@ -115,13 +125,22 @@ class AccessTokenView(AccessTokenView):
         )
 
     def invalidate_grant(self, grant):
-        grant.expires = now() - timedelta(days=1)
-        grant.save()
+        if constants.DELETE_EXPIRED:
+            grant.delete()
+        else:
+            grant.expires = now() - timedelta(days=1)
+            grant.save()
 
     def invalidate_refresh_token(self, rt):
-        rt.expired = True
-        rt.save()
+        if constants.DELETE_EXPIRED:
+            rt.delete()
+        else:
+            rt.expired = True
+            rt.save()
 
     def invalidate_access_token(self, at):
-        at.expires = now() - timedelta(days=1)
-        at.save()
+        if constants.DELETE_EXPIRED:
+            at.delete()
+        else:
+            at.expires = now() - timedelta(days=1)
+            at.save()
