@@ -376,7 +376,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_password_grant_public(self):
         c = self.get_client()
-        c.client_type = 1 # public
+        c.client_type = constants.PUBLIC
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -395,7 +395,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_password_grant_confidential(self):
         c = self.get_client()
-        c.client_type = 0 # confidential
+        c.client_type = constants.CONFIDENTIAL
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -411,7 +411,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_password_grant_confidential_no_secret(self):
         c = self.get_client()
-        c.client_type = 0 # confidential
+        c.client_type = constants.CONFIDENTIAL
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -425,7 +425,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_password_grant_invalid_password_public(self):
         c = self.get_client()
-        c.client_type = 1 # public
+        c.client_type = constants.PUBLIC
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -440,7 +440,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_password_grant_invalid_password_confidential(self):
         c = self.get_client()
-        c.client_type = 0 # confidential
+        c.client_type = constants.CONFIDENTIAL
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -454,10 +454,61 @@ class AccessTokenTest(BaseOAuth2TestCase):
         self.assertEqual(400, response.status_code, response.content)
         self.assertEqual('invalid_grant', json.loads(response.content)['error'])
 
-    def test_access_token_response_valid_token_type(self):
-        token = self._login_authorize_get_token()
-        self.assertEqual(token['token_type'], constants.TOKEN_TYPE, token)
+    def test_client_credentials_grant__public(self):
+        """
+        Public clients should not be able to get client credentials
+        access as they can't use a client secret and client ids are
+        public knowledge.
+        """
+        c = self.get_client()
+        c.client_type = constants.PUBLIC
+        c.save()
 
+        response = self.client.post(self.access_token_url(), {
+            'grant_type': 'client_credentials',
+            'client_id': c.client_id
+            #no secrets for public clients
+        })
+        self.assertEqual(400, response.status_code, response.content)
+        self.assertEqual('invalid_client', json.loads(response.content)['error'])
+
+    def test_client_credentials_grant__confidential(self):
+        c = self.get_client()
+        c.client_type = constants.CONFIDENTIAL
+        c.save()
+
+        response = self.client.post(self.access_token_url(), {
+            'grant_type': 'client_credentials',
+            'client_id': c.client_id,
+            'client_secret': c.client_secret
+        })
+        data = json.loads(response.content)
+        self.assertEqual(200, response.status_code, response.content)
+        self.assertIn('access_token', data, response.content)
+        self.assertIn('expires_in', data, response.content)
+        self.assertIn('scope', data, response.content)
+        self.assertEqual('Bearer', data['token_type'], response.content)
+        # No refresh token should be made for client_credentials grants
+        self.assertEqual(0, RefreshToken.objects.filter(access_token__token=data['access_token']).count())
+
+    def test_client_credentials_grant__no_user(self):
+        c = self.get_client(id=4) # client.user = None
+        c.client_type = 0
+        c.save()
+
+        response = self.client.post(self.access_token_url(), {
+            'grant_type': 'client_credentials',
+            'client_id': c.client_id,
+            'client_secret': c.client_secret
+        })
+        data = json.loads(response.content)
+        self.assertEqual(200, response.status_code, response.content)
+        self.assertIn('access_token', data, response.content)
+        self.assertIn('expires_in', data, response.content)
+        self.assertIn('scope', data, response.content)
+        self.assertEqual('Bearer', data['token_type'], response.content)
+        # No refresh token should be made for client_credentials grants
+        self.assertEqual(0, RefreshToken.objects.filter(access_token__token=data['access_token']).count())
 
 class AuthBackendTest(BaseOAuth2TestCase):
     fixtures = ['test_oauth2']

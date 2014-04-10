@@ -308,7 +308,13 @@ class Redirect(OAuthView, Mixin):
         client = self.get_data(request, "client")
 
         # client must be properly deserialized to become a valid instance
-        client = Client.deserialize(client)
+        # but only if it has been serialized in the first place
+        try:
+            client = Client.deserialize(client)
+        except:
+            if not isinstance(client, Client):
+                raise
+
 
         # this is an edge case that is caused by making a request with no data
         # it should only happen if this view is called manually, out of the
@@ -377,7 +383,8 @@ class AccessToken(OAuthView, Mixin):
     Authentication backends used to authenticate a particular client.
     """
 
-    grant_types = ['authorization_code', 'refresh_token', 'password']
+    grant_types = ['authorization_code', 'refresh_token', 'password',
+                   'client_credentials']
     """
     The default grant types supported by this view.
     """
@@ -406,7 +413,15 @@ class AccessToken(OAuthView, Mixin):
         """
         raise NotImplementedError
 
-    def get_access_token(self, request, user, scope, client):
+    def get_client_credentials_grant(self, request, data, client):
+        """
+        Return the optional parameters (scope) associated with this request.
+
+        :return: ``tuple`` - ``(True or False, options)``
+        """
+        raise NotImplementedError
+
+    def get_access_token(self, request, user, scope, client, refreshable=True):
         """
         Override to handle fetching of an existing access token.
 
@@ -539,8 +554,26 @@ class AccessToken(OAuthView, Mixin):
         else:
             at = self.create_access_token(request, user, scope, client)
             # Public clients don't get refresh tokens
-            if client.client_type != 1:
+            if client.client_type == constants.CONFIDENTIAL:
                 rt = self.create_refresh_token(request, user, scope, at, client)
+
+        return self.access_token_response(at)
+
+    def client_credentials(self, request, data, client):
+        """
+        Handle ``grant_type=client_credentials`` requests as defined in
+        :rfc:`4.4`.
+        """
+        data = self.get_client_credentials_grant(request, data, client)
+        scope = data.get('scope')
+
+        # Client credentials should operate on public data and the
+        # client only -- exposing the user has the potential to compromise
+        # other assets associated with the user but not necessarily the client
+        if constants.SINGLE_ACCESS_TOKEN:
+            at = self.get_access_token(request, None, scope, client, refreshable=False)
+        else:
+            at = self.create_access_token(request, None, scope, client)
 
         return self.access_token_response(at)
 
@@ -556,6 +589,8 @@ class AccessToken(OAuthView, Mixin):
             return self.refresh_token
         elif grant_type == 'password':
             return self.password
+        elif grant_type == 'client_credentials':
+            return self.client_credentials
         return None
 
     def get(self, request):

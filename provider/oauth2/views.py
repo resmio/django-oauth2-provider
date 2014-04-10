@@ -6,7 +6,7 @@ from ..views import AccessToken as AccessTokenView, OAuthError
 from ..utils import now
 from .forms import AuthorizationRequestForm, AuthorizationForm
 from .forms import PasswordGrantForm, RefreshTokenGrantForm
-from .forms import AuthorizationCodeGrantForm
+from .forms import AuthorizationCodeGrantForm, ClientCredentialsGrantForm
 from .models import Client, RefreshToken, AccessToken
 from .backends import BasicClientBackend, RequestParamsClientBackend, PublicPasswordBackend
 
@@ -92,7 +92,13 @@ class AccessTokenView(AccessTokenView):
             raise OAuthError(form.errors)
         return form.cleaned_data
 
-    def get_access_token(self, request, user, scope, client):
+    def get_client_credentials_grant(self, request, data, client):
+        form = ClientCredentialsGrantForm(data, client=client)
+        if not form.is_valid():
+            raise OAuthError(form.errors)
+        return form.cleaned_data
+
+    def get_access_token(self, request, user, scope, client, refreshable=True):
         try:
             # Attempt to fetch an existing access token.
             at = AccessToken.objects.get(user=user, client=client,
@@ -100,7 +106,8 @@ class AccessTokenView(AccessTokenView):
         except AccessToken.DoesNotExist:
             # None found... make a new one!
             at = self.create_access_token(request, user, scope, client)
-            self.create_refresh_token(request, user, scope, at, client)
+            if refreshable:
+                self.create_refresh_token(request, user, scope, at, client)
         return at
 
     def create_access_token(self, request, user, scope, client):
