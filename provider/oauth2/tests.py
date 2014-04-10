@@ -376,7 +376,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_password_grant_public(self):
         c = self.get_client()
-        c.client_type = 1 # public
+        c.client_type = constants.PUBLIC
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -395,7 +395,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_password_grant_confidential(self):
         c = self.get_client()
-        c.client_type = 0 # confidential
+        c.client_type = constants.CONFIDENTIAL
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -411,7 +411,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_password_grant_confidential_no_secret(self):
         c = self.get_client()
-        c.client_type = 0 # confidential
+        c.client_type = constants.CONFIDENTIAL
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -425,7 +425,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_password_grant_invalid_password_public(self):
         c = self.get_client()
-        c.client_type = 1 # public
+        c.client_type = constants.PUBLIC
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -440,7 +440,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_password_grant_invalid_password_confidential(self):
         c = self.get_client()
-        c.client_type = 0 # confidential
+        c.client_type = constants.CONFIDENTIAL
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -461,7 +461,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
         public knowledge.
         """
         c = self.get_client()
-        c.client_type = 1 # public
+        c.client_type = constants.PUBLIC
         c.save()
 
         response = self.client.post(self.access_token_url(), {
@@ -474,7 +474,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
 
     def test_client_credentials_grant__confidential(self):
         c = self.get_client()
-        c.client_type = 0 # confidential
+        c.client_type = constants.CONFIDENTIAL
         c.save()
 
         response = self.client.post(self.access_token_url(), {
