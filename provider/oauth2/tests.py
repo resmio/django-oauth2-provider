@@ -211,6 +211,29 @@ class AuthorizationTest(BaseOAuth2TestCase):
         self.assertEqual(400, response.status_code)
 
 
+class ValidationAndExceptionTest(BaseOAuth2TestCase):
+    fixtures = ['test_oauth2.json']
+
+    def test_validate_uri__bad_uri(self):
+        self.login()
+
+        response = self.client.get(self.auth_url() + '?client_id=%s&response_type=code&redirect_uri=%s' % (
+            self.get_client().client_id,
+            'blurb'))
+        response = self.client.get(self.auth_url2())
+
+        self.assertEqual(400, response.status_code)
+        self.assertIn(escape(u"Enter a valid URL."), response.content, response.content)
+
+        response = self.client.get(self.auth_url() + '?client_id=%s&response_type=code&redirect_uri=%s' % (
+            self.get_client().client_id,
+            self.get_client().redirect_uri))
+        response = self.client.get(self.auth_url2())
+
+        self.assertEqual(200, response.status_code)
+
+
+
 class AccessTokenTest(BaseOAuth2TestCase):
     fixtures = ['test_oauth2.json']
 

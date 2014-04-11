@@ -2,7 +2,7 @@ import hashlib
 import shortuuid
 from datetime import datetime, tzinfo
 from django.conf import settings
-from django.utils import dateparse
+from django.utils import dateparse, timezone
 from django.db.models.fields import (DateTimeField, DateField,
                                      EmailField, TimeField,
                                      FieldDoesNotExist)
@@ -11,20 +11,11 @@ from .constants import EXPIRE_DELTA, EXPIRE_DELTA_PUBLIC, EXPIRE_CODE_DELTA
 
 try:
     import json
-except ImporError:
+except ImportError:
     import simplejson as json
 
-try:
-    from django.utils import timezone
-except ImportError:
-    timezone = None
-
 def now():
-    if timezone:
-        return timezone.now()
-    else:
-        # Django 1.3 compatibility
-        return datetime.now()
+    return timezone.now()
 
 
 def short_token():
@@ -75,6 +66,8 @@ def serialize_instance(instance):
     Django serialization, as these are models are not "complete" yet.
     Serialization will start complaining about missing relations et al.
     """
+    if instance is None:
+        return json.loads(json.dumps(None, cls=DjangoJSONEncoder))
     ret = dict([(k, v)
                 for k, v in instance.__dict__.items()
                 if not k.startswith('_')])
@@ -82,7 +75,11 @@ def serialize_instance(instance):
 
 
 def deserialize_instance(model, data={}):
-    "Translate raw data into a model instance."
+    """
+    Translate raw data into a model instance.
+    This (and the whole session caching) is janky and should be re-thought.
+    The spec offers an optional "state" param that could be used for this instead
+    """
     ret = model()
     for k, v in data.items():
         if v is not None:
