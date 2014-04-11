@@ -255,7 +255,16 @@ class Authorize(OAuthView, Mixin):
 
         try:
             client, data = self._validate_client(request, data)
-        except OAuthError, e:
+        except OAuthError as e:
+            form_errors = e.args[0]
+            if 'error' not in form_errors:
+                for err, desc in form_errors.iteritems():
+                    if err in ['redirect_uri', 'unauthorized_client']:
+                        e = OAuthError({
+                            'error': err,
+                            'error_description': _(desc[0])
+                        })
+                        break
             return self.error_response(request, e.args[0], status=400)
 
         authorization_form = self.get_authorization_form(request, client,
