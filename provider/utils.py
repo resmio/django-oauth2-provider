@@ -1,6 +1,5 @@
 import hashlib
 import shortuuid
-from datetime import datetime, tzinfo
 from django.conf import settings
 from django.utils import dateparse, timezone
 from django.db.models.fields import (DateTimeField, DateField,
@@ -10,9 +9,9 @@ from django.core.serializers.json import DjangoJSONEncoder
 from .constants import EXPIRE_DELTA, EXPIRE_DELTA_PUBLIC, EXPIRE_CODE_DELTA
 
 try:
-    import json
-except ImportError:
     import simplejson as json
+except ImportError:
+    import json
 
 def now():
     return timezone.now()
