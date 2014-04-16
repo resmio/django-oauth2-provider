@@ -1,6 +1,5 @@
 import hashlib
 import shortuuid
-from datetime import datetime, tzinfo
 from django.conf import settings
 from django.utils import dateparse, timezone
 from django.db.models.fields import (DateTimeField, DateField,
