@@ -1,5 +1,6 @@
 import json
 import urlparse
+import logging
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect, QueryDict
 from django.utils.translation import ugettext as _
@@ -8,6 +9,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from oauth2.models import Client
 from . import constants, scope
 
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 class OAuthError(Exception):
     """
@@ -255,7 +259,24 @@ class Authorize(OAuthView, Mixin):
 
         try:
             client, data = self._validate_client(request, data)
-        except OAuthError, e:
+        except OAuthError as e:
+            form_errors = e.args[0]
+            if 'error' not in form_errors:
+                new_error = None
+                for err, desc in form_errors.iteritems():
+                    if err in ['redirect_uri', 'unauthorized_client']:
+                        new_error = OAuthError({
+                            'error': err,
+                            'error_description': _(desc[0])
+                        })
+                        break
+                if new_error is None:
+                    logger.exception(e)
+                    new_error = OAuthError({
+                        'error': 'unknown_error',
+                        'error_description': _(form_errors.items()[0][1])
+                    })
+                e = new_error
             return self.error_response(request, e.args[0], status=400)
 
         authorization_form = self.get_authorization_form(request, client,

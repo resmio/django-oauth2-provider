@@ -1,4 +1,5 @@
 import json
+from mock import patch
 import urlparse
 import datetime
 from django.http import QueryDict
@@ -9,6 +10,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from .. import constants, scope
 from ..compat import skipIfCustomUser
+from provider.views import OAuthError
 from ..templatetags.scope import scopes
 from ..utils import now as date_now
 from .forms import ClientForm
@@ -209,6 +211,42 @@ class AuthorizationTest(BaseOAuth2TestCase):
         self.login()
         response = self.client.get(self.redirect_url())
         self.assertEqual(400, response.status_code)
+
+
+class ValidationAndExceptionTest(BaseOAuth2TestCase):
+    fixtures = ['test_oauth2.json']
+
+    def raise_unknown_exception(self, request, data):
+        raise OAuthError({'unknown_field':'had some errors'})
+
+    def test_validate_uri__bad_uri(self):
+        self.login()
+
+        response = self.client.get(self.auth_url() + '?client_id=%s&response_type=code&redirect_uri=%s' % (
+            self.get_client().client_id,
+            'blurb'))
+        response = self.client.get(self.auth_url2())
+
+        self.assertEqual(400, response.status_code)
+        self.assertIn(escape(u"Enter a valid URL."), response.content, response.content)
+
+        response = self.client.get(self.auth_url() + '?client_id=%s&response_type=code&redirect_uri=%s' % (
+            self.get_client().client_id,
+            self.get_client().redirect_uri))
+        response = self.client.get(self.auth_url2())
+
+        self.assertEqual(200, response.status_code)
+
+    def test_unknown_exception(self):
+        with patch('provider.views.Authorize._validate_client', self.raise_unknown_exception):
+            self.login()
+
+            response = self.client.get(self.auth_url() + '?client_id=%s&response_type=code&redirect_uri=%s' % (
+                self.get_client().client_id,
+                self.get_client().redirect_uri))
+            response = self.client.get(self.auth_url2())
+            self.assertEqual(400, response.status_code, response.content)
+
 
 
 class AccessTokenTest(BaseOAuth2TestCase):

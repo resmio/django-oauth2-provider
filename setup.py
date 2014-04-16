@@ -34,6 +34,10 @@ setup(
     install_requires=[
         "shortuuid>=0.3"
     ],
+    test_requires=[
+        "mock>=1.0.1",
+        "South>=0.8.4"
+    ],
     include_package_data=True,
     zip_safe=False,
 )
