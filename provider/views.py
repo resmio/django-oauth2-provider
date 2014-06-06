@@ -11,6 +11,7 @@ from . import constants, scope
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
+api1244Logger = logging.getLogger("API-1244")
 logger.setLevel(logging.ERROR)
 
 class OAuthError(Exception):
@@ -119,6 +120,8 @@ class Capture(OAuthView, Mixin):
 
     def handle(self, request, data):
         self.cache_data(request, data)
+
+        api1244Logger.log(1, 'Authorize(base) :: handle: setting cache for request (%s) with data (%s)', request, data)
 
         if constants.ENFORCE_SECURE and not request.is_secure():
             return self.render_to_response({'error': 'access_denied',
@@ -252,6 +255,8 @@ class Authorize(OAuthView, Mixin):
     def handle(self, request, post_data=None):
         data = self.get_data(request)
 
+        api1244Logger.log(1, 'Authorize(base) :: handle: request (%s), data (%s)', request, data)
+
         if data is None:
             return self.error_response(request, {
                 'error': 'expired_authorization',
@@ -290,6 +295,8 @@ class Authorize(OAuthView, Mixin):
 
         code = self.save_authorization(request, client,
             authorization_form, data)
+
+        api1244Logger.log(1, 'Authorize(base) :: handle: setting cache for request (%s) with data (%s), code(%s), client (%s)', request, data, code, client)
 
         # be sure to serialize any objects that aren't natively json
         # serializable because these values are stored as session data
