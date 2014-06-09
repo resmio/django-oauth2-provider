@@ -8,9 +8,11 @@ from django.views.generic.base import TemplateView
 from django.core.exceptions import ObjectDoesNotExist
 from oauth2.models import Client
 from . import constants, scope
+import inspect
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
+api_1244_logger = logging.getLogger("API-1244")
 logger.setLevel(logging.ERROR)
 
 class OAuthError(Exception):
@@ -59,6 +61,15 @@ class Mixin(object):
 
         :param key: `str` The key under which the data was stored.
         """
+
+        api_1244_logger.info(
+            "get_data (called by %s from %s) %s: %s",
+            str(inspect.stack()[1][0].f_locals['self'].__class__),
+            inspect.stack()[1][0].f_code.co_name,
+            '%s:%s' % (constants.SESSION_KEY, key),
+            request.session.get('%s:%s' % (constants.SESSION_KEY, key))
+        )
+
         return request.session.get('%s:%s' % (constants.SESSION_KEY, key))
 
     def cache_data(self, request, data, key='params'):
@@ -69,12 +80,30 @@ class Mixin(object):
         :param data: Arbitrary data to store.
         :param key: `str` The key under which to store the data.
         """
+
+        api_1244_logger.info(
+            "cache_data (called by %s from %s) %s: %s",
+            str(inspect.stack()[1][0].f_locals['self'].__class__),
+            inspect.stack()[1][0].f_code.co_name,
+            '%s:%s' % (constants.SESSION_KEY, key),
+            data
+        )
+
         request.session['%s:%s' % (constants.SESSION_KEY, key)] = data
 
     def clear_data(self, request):
         """
         Clear all OAuth related data from the session store.
         """
+
+        api_1244_logger.info(
+            "clear_data (called by %s from %s) %s: %s",
+            str(inspect.stack()[1][0].f_locals['self'].__class__),
+            inspect.stack()[1][0].f_code.co_name,
+            '%s:%s' % (constants.SESSION_KEY, 'params'),
+            request.session.get('%s:%s' % (constants.SESSION_KEY, 'params'))
+        )
+
         for key in request.session.keys():
             if key.startswith(constants.SESSION_KEY):
                 del request.session[key]
@@ -118,6 +147,7 @@ class Capture(OAuthView, Mixin):
         raise NotImplementedError
 
     def handle(self, request, data):
+
         self.cache_data(request, data)
 
         if constants.ENFORCE_SECURE and not request.is_secure():
@@ -253,6 +283,11 @@ class Authorize(OAuthView, Mixin):
         data = self.get_data(request)
 
         if data is None:
+            api_1244_logger.info(
+                "%s: clear_data %s",
+                str(inspect.stack()[1][0].f_locals['self'].__class__),
+                request.session.get('%s:%s' % (constants.SESSION_KEY, 'params'))
+            )
             return self.error_response(request, {
                 'error': 'expired_authorization',
                 'error_description': _('Authorization session has expired.')})
