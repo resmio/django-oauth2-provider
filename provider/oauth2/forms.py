@@ -36,10 +36,9 @@ class ClientAuthForm(forms.Form):
         data = self.cleaned_data
         try:
             client = Client.objects.get(client_id=data.get('client_id'),
-                client_secret=data.get('client_secret'))
+                                        client_secret=data.get('client_secret'))
         except Client.DoesNotExist:
-            raise forms.ValidationError(_("Client could not be validated with "
-                "key pair."))
+            raise forms.ValidationError(_('Client could not be validated with key pair.'))
 
         data['client'] = client
         return data
@@ -47,7 +46,7 @@ class ClientAuthForm(forms.Form):
 
 class ScopeChoiceField(forms.ChoiceField):
     """
-    Custom form field that seperates values on space as defined in
+    Custom form field that separates values on space as defined in
     :rfc:`3.3`.
     """
     widget = forms.SelectMultiple
@@ -79,8 +78,7 @@ class ScopeChoiceField(forms.ChoiceField):
             if not self.valid_value(val):
                 raise OAuthValidationError({
                     'error': 'invalid_request',
-                    'error_description': _("'%s' is not a valid scope.") % \
-                            val})
+                    'error_description': _("'%s' is not a valid scope.") % val})
 
 
 class ScopeMixin(object):
@@ -143,16 +141,15 @@ class AuthorizationRequestForm(ScopeMixin, OAuthForm):
 
         if not response_type:
             raise OAuthValidationError({'error': 'invalid_request',
-                'error_description': "No 'response_type' supplied."})
+                                        'error_description': "No 'response_type' supplied."})
 
         types = response_type.split(" ")
 
-        for type in types:
-            if type not in RESPONSE_TYPE_CHOICES:
+        for _type in types:
+            if _type not in RESPONSE_TYPE_CHOICES:
                 raise OAuthValidationError({
                     'error': 'unsupported_response_type',
-                    'error_description': u"'%s' is not a supported response "
-                        "type." % type})
+                    'error_description': u"'%s' is not a supported response type." % _type})
 
         return response_type
 
@@ -167,8 +164,7 @@ class AuthorizationRequestForm(ScopeMixin, OAuthForm):
             if redirect_uri not in self.client.redirect_uri.split(" "):
                 raise OAuthValidationError({
                     'error': 'invalid_request',
-                    'error_description': _("The requested redirect didn't "
-                        "match the client settings.")})
+                    'error_description': _("The requested redirect didn't match the client settings.")})
 
         return redirect_uri
 
@@ -205,8 +201,7 @@ class RefreshTokenGrantForm(ScopeMixin, OAuthForm):
             raise OAuthValidationError({'error': 'invalid_request'})
 
         try:
-            token = RefreshToken.objects.get(token=token,
-                expired=False, client=self.client)
+            token = RefreshToken.objects.get(token=token, expired=False, client=self.client)
         except RefreshToken.DoesNotExist:
             raise OAuthValidationError({'error': 'invalid_grant'})
 
@@ -299,7 +294,7 @@ class PasswordGrantForm(ScopeMixin, OAuthForm):
         data = self.cleaned_data
 
         user = authenticate(username=data.get('username'),
-            password=data.get('password'))
+                            password=data.get('password'))
 
         if user is None:
             raise OAuthValidationError({'error': 'authentication_failed'})
@@ -328,7 +323,7 @@ class PublicPasswordGrantForm(PasswordGrantForm):
         except Client.DoesNotExist:
             raise OAuthValidationError({'error': 'invalid_client'})
 
-        if client.client_type != 1: # public
+        if client.client_type != 1:  # public
             raise OAuthValidationError({'error': 'invalid_client'})
 
         data['client'] = client
