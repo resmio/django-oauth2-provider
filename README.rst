@@ -1,7 +1,7 @@
 django-oauth2-provider
 ======================
 
-.. image:: https://travis-ci.org/caffeinehit/django-oauth2-provider.png?branch=master
+.. image:: https://travis-ci.org/resmio/django-oauth2-provider.svg?branch=master
 
 *django-oauth2-provider* is a Django application that provides
 customizable OAuth2\-authentication for your Django projects.
