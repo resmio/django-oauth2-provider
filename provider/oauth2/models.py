@@ -4,8 +4,6 @@ implement these models with fields and and methods to be compatible with the
 views in :attr:`provider.views`.
 """
 
-import datetime
-
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
@@ -37,8 +35,7 @@ class Client(models.Model):
 
     Clients are outlined in the :rfc:`2` and its subsections.
     """
-    user = models.ForeignKey(AUTH_USER_MODEL, related_name='oauth2_client',
-        blank=True, null=True)
+    user = models.ForeignKey(AUTH_USER_MODEL, related_name='oauth2_client', blank=True, null=True)
     name = models.CharField(max_length=255, blank=True)
     url = models.URLField(help_text="Your application's URL.")
     redirect_uri = models.TextField(help_text="Your application's callback URL", validators=[validate_uris])
@@ -146,8 +143,7 @@ class AccessToken(models.Model):
     token = models.CharField(max_length=255, default=long_token, db_index=True)
     client = models.ForeignKey(Client)
     expires = models.DateTimeField()
-    scope = models.IntegerField(default=constants.SCOPES[0][0],
-            choices=constants.SCOPES)
+    scope = models.IntegerField(default=constants.SCOPES[0][0], choices=constants.SCOPES)
     created = models.DateTimeField(default=timezone.now, blank=True, editable=False)
     modified = models.DateTimeField(blank=True, editable=False)
 
@@ -197,8 +193,7 @@ class RefreshToken(models.Model):
     """
     user = models.ForeignKey(AUTH_USER_MODEL, blank=True, null=True)
     token = models.CharField(max_length=255, default=long_token)
-    access_token = models.OneToOneField(AccessToken,
-            related_name='refresh_token')
+    access_token = models.OneToOneField(AccessToken, related_name='refresh_token')
     client = models.ForeignKey(Client)
     expired = models.BooleanField(default=False)
     created = models.DateTimeField(default=timezone.now, blank=True, editable=False)
