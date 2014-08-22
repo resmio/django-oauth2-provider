@@ -490,7 +490,7 @@ class AccessTokenTest(BaseOAuth2TestCase):
         })
 
         self.assertEqual(400, response.status_code, response.content)
-        self.assertEqual('invalid_grant', json.loads(response.content)['error'])
+        self.assertEqual('authentication_failed', json.loads(response.content)['error'])
 
     def test_client_credentials_grant__public(self):
         """
